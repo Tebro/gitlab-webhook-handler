@@ -3,15 +3,27 @@ import json
 import argparse
 import pprint
 import os
+from subprocess import call
 
 
 class GitHookHandler(BaseHTTPRequestHandler):
 
     def set_path(self, path):
-        self.project_path = path
+        self.projects_path = path
 
     def handle_payload(self, json_payload):
-        pprint.pprint(json_payload)
+        #pprint.pprint(json_payload)
+        if json_payload['ref'] != 'refs/heads/master':
+            return False
+
+        repo = json_payload['repository']['name']
+        url = json_payload['repository']['url']
+
+        if os.path.isdir("%s%s" % (self.projects_path, repo)):
+            call("git --git-dir=%s%s/.git pull origin master" % (self.projects_path, repo), shell=True)
+        else:
+            call("git clone %s %s%s" % (url, self.projects_path, repo), shell=True)
+
 
 
     def do_POST(self):
@@ -29,7 +41,12 @@ argparser.add_argument('path', type=str, help="Path to projects root.")
 args = argparser.parse_args()
 
 handler = GitHookHandler()
-handler.set_path(args.path)
+
+path = args.path
+if not path.endswith('/'):
+    path += "/"
+
+handler.set_path(path)
 
 server = HTTPServer(("", args.port), handler)
 server.serve_forever()
