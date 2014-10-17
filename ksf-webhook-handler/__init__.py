@@ -5,11 +5,9 @@ import pprint
 import os
 from subprocess import call
 
+path = ""
 
 class GitHookHandler(BaseHTTPRequestHandler):
-
-    def set_path(self, path):
-        self.projects_path = path
 
     def handle_payload(self, json_payload):
         #pprint.pprint(json_payload)
@@ -23,7 +21,6 @@ class GitHookHandler(BaseHTTPRequestHandler):
             call("git --git-dir=%s%s/.git pull origin master" % (self.projects_path, repo), shell=True)
         else:
             call("git clone %s %s%s" % (url, self.projects_path, repo), shell=True)
-
 
 
     def do_POST(self):
@@ -40,13 +37,10 @@ argparser.add_argument('port', type=int, help="TCP port to listen on.")
 argparser.add_argument('path', type=str, help="Path to projects root.")
 args = argparser.parse_args()
 
-handler = GitHookHandler()
 
 path = args.path
 if not path.endswith('/'):
     path += "/"
 
-handler.set_path(path)
-
-server = HTTPServer(("", args.port), handler)
+server = HTTPServer(("", args.port), GitHookHandler)
 server.serve_forever()
