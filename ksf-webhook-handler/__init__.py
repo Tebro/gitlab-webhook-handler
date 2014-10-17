@@ -22,7 +22,6 @@ class GitHookHandler(BaseHTTPRequestHandler):
         else:
             call("git clone %s %s%s" % (url, path, repo), shell=True)
 
-
     def do_POST(self):
         data_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(data_length)
