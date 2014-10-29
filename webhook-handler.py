@@ -18,7 +18,7 @@ class GitHookHandler(BaseHTTPRequestHandler):
         url = json_payload['repository']['url']
 
         if os.path.isdir("%s%s" % (path, repo)):
-            call("git --git-dir=%s%s/.git pull origin master" % (path, repo), shell=True)
+            call("git --git-dir=%s%s/.git --work-tree=/%s%s/ pull origin master" % (path, repo, path, repo), shell=True)
         else:
             call("git clone %s %s%s" % (url, path, repo), shell=True)
 
