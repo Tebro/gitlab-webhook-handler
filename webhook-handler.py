@@ -4,6 +4,7 @@ import argparse
 import pprint
 import os
 from subprocess import call
+from config import config
 
 path = ""
 
@@ -17,10 +18,17 @@ class GitHookHandler(BaseHTTPRequestHandler):
         repo = json_payload['repository']['name']
         url = json_payload['repository']['url']
 
-        if os.path.isdir("%s%s" % (path, repo)):
-            call("git --git-dir=%s%s/.git --work-tree=/%s%s/ pull origin master" % (path, repo, path, repo), shell=True)
+        actual_path = ""
+
+        if repo in config:
+            actual_path = config[repo]
         else:
-            call("git clone %s %s%s" % (url, path, repo), shell=True)
+            actual_path = "%s%s" % (path, repo)
+
+        if os.path.isdir("%s" % actual_path):
+            call("git --git-dir=%s/.git --work-tree=/%s/ pull origin master" % (actual_path, actual_path), shell=True)
+        else:
+            call("git clone %s %s" % (url, actual_path), shell=True)
 
     def do_POST(self):
         data_length = int(self.headers['Content-Length'])
